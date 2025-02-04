@@ -1,0 +1,14 @@
+streamlit
+pandas
+numpy
+plotly
+scikit-learn
+optuna
+shap
+xgboost
+lightgbm
+sweetviz
+pandas-profiling
+reportlab
+fastapi
+uvicorn
