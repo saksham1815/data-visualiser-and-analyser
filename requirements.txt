@@ -12,3 +12,4 @@ pandas-profiling
 reportlab
 fastapi
 uvicorn
+statsmodels
