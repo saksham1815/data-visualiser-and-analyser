@@ -39,11 +39,9 @@ def clean_data(df):
     
     for col in df.columns:
         if df[col].dtype in ['float64', 'int64']:
-            # flatten the 2D output to 1D
-            df[col] = imputer_numeric.fit_transform(df[[col]]).ravel()
+            df[col] = imputer_numeric.fit_transform(df[[col]])
         else:
-            # flatten the 2D output to 1D
-            df[col] = imputer_categorical.fit_transform(df[[col]]).ravel()
+            df[col] = imputer_categorical.fit_transform(df[[col]])
     
     df = df.drop_duplicates()
     st.write("Data cleaning completed.")
@@ -155,7 +153,7 @@ def plot_univariate(df):
 
 def plot_bivariate(df):
     st.subheader("Bivariate Analysis")
-    cols = st.multiselect("Select two columns", df.columns, key="bi_cols")
+    cols = st.multiselect("Select two columns", df.columns, max_selections=2, key="bi_cols")
     if len(cols) != 2:
         st.warning("Please select exactly two columns.")
         return
@@ -288,6 +286,7 @@ def train_regression_model(df):
         test_input[col] = st.number_input(f"Value for {col}", value=float(X[col].mean()), key=f"test_{col}")
     if st.button("Predict Test Case", key="reg_predict"):
         test_df = pd.DataFrame([test_input])
+        # If polynomial transformation was applied, transform the input as well.
         if model_choice == "Polynomial Regression (Degree 2)":
             test_df = poly.transform(test_df)
         pred = model.predict(test_df)
@@ -300,6 +299,7 @@ def train_regression_model(df):
                        file_name="regression_model.pkl",
                        mime="application/octet-stream")
     
+    # Generate analysis report
     transformation = st.session_state.get("transform", "None")
     outlier_method = st.session_state.get("outliers", "None")
     reduction = st.session_state.get("reduce", "None")
