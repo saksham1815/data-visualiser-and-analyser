@@ -33,18 +33,25 @@ def load_data(uploaded_file, encoding):
         return None
 
 def clean_data(df):
-    st.write("**Cleaning Data:** Handling missing values and removing duplicates...")
-    imputer_numeric = SimpleImputer(strategy="median")
-    imputer_categorical = SimpleImputer(strategy="most_frequent")
-    
-    for col in df.columns:
-        if df[col].dtype in ['float64', 'int64']:
-            df[col] = imputer_numeric.fit_transform(df[[col]])
-        else:
-            df[col] = imputer_categorical.fit_transform(df[[col]])
-    
+    """
+    Cleans the dataset by handling missing values and removing duplicates.
+    - Numerical columns: Imputed with mean.
+    - Categorical columns: Imputed with most frequent.
+    - Duplicates: Removed.
+    """
+    num_cols = df.select_dtypes(include=['int64', 'float64']).columns
+    cat_cols = df.select_dtypes(include=['object', 'category']).columns
+
+    if not num_cols.empty:
+        imputer_numeric = SimpleImputer(strategy='mean')
+        df[num_cols] = imputer_numeric.fit_transform(df[num_cols])
+
+    if not cat_cols.empty:
+        imputer_categorical = SimpleImputer(strategy='most_frequent')
+        for col in cat_cols:
+            df[col] = imputer_categorical.fit_transform(df[[col]]).ravel()
+
     df = df.drop_duplicates()
-    st.write("Data cleaning completed.")
     return df
 
 def transform_data(df):
@@ -120,14 +127,16 @@ def reduce_data(df):
         return pca_df
     else:
         return df
-
 def preprocess_data(raw_df):
-    """Run cleaning, transformation, outlier management, and reduction on the raw dataset."""
     df = clean_data(raw_df)
-    df = transform_data(df)
-    df = handle_outliers(df)
-    df = reduce_data(df)
+
+    # Optional: Normalize numerical columns
+    numeric_cols = df.select_dtypes(include=['int64', 'float64']).columns
+    if not numeric_cols.empty:
+        df[numeric_cols] = (df[numeric_cols] - df[numeric_cols].mean()) / df[numeric_cols].std()
+
     return df
+
 
 
 # =============================================================================
