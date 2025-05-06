@@ -33,25 +33,20 @@ def load_data(uploaded_file, encoding):
         return None
 
 def clean_data(df):
-    """
-    Cleans the dataset by handling missing values and removing duplicates.
-    - Numerical columns: Imputed with mean.
-    - Categorical columns: Imputed with most frequent.
-    - Duplicates: Removed.
-    """
-    num_cols = df.select_dtypes(include=['int64', 'float64']).columns
-    cat_cols = df.select_dtypes(include=['object', 'category']).columns
-
-    if not num_cols.empty:
-        imputer_numeric = SimpleImputer(strategy='mean')
-        df[num_cols] = imputer_numeric.fit_transform(df[num_cols])
-
-    if not cat_cols.empty:
-        imputer_categorical = SimpleImputer(strategy='most_frequent')
-        for col in cat_cols:
+    st.write("**Cleaning Data:** Handling missing values and removing duplicates...")
+    imputer_numeric = SimpleImputer(strategy="median")
+    imputer_categorical = SimpleImputer(strategy="most_frequent")
+    
+    for col in df.columns:
+        if df[col].dtype in ['float64', 'int64']:
+            # flatten the 2D output to 1D
+            df[col] = imputer_numeric.fit_transform(df[[col]]).ravel()
+        else:
+            # flatten the 2D output to 1D
             df[col] = imputer_categorical.fit_transform(df[[col]]).ravel()
-
+    
     df = df.drop_duplicates()
+    st.write("Data cleaning completed.")
     return df
 
 def transform_data(df):
@@ -127,16 +122,14 @@ def reduce_data(df):
         return pca_df
     else:
         return df
+
 def preprocess_data(raw_df):
+    """Run cleaning, transformation, outlier management, and reduction on the raw dataset."""
     df = clean_data(raw_df)
-
-    # Optional: Normalize numerical columns
-    numeric_cols = df.select_dtypes(include=['int64', 'float64']).columns
-    if not numeric_cols.empty:
-        df[numeric_cols] = (df[numeric_cols] - df[numeric_cols].mean()) / df[numeric_cols].std()
-
+    df = transform_data(df)
+    df = handle_outliers(df)
+    df = reduce_data(df)
     return df
-
 
 
 # =============================================================================
@@ -162,7 +155,7 @@ def plot_univariate(df):
 
 def plot_bivariate(df):
     st.subheader("Bivariate Analysis")
-    cols = st.multiselect("Select two columns", df.columns, max_selections=2, key="bi_cols")
+    cols = st.multiselect("Select two columns", df.columns, key="bi_cols")
     if len(cols) != 2:
         st.warning("Please select exactly two columns.")
         return
@@ -295,7 +288,6 @@ def train_regression_model(df):
         test_input[col] = st.number_input(f"Value for {col}", value=float(X[col].mean()), key=f"test_{col}")
     if st.button("Predict Test Case", key="reg_predict"):
         test_df = pd.DataFrame([test_input])
-        # If polynomial transformation was applied, transform the input as well.
         if model_choice == "Polynomial Regression (Degree 2)":
             test_df = poly.transform(test_df)
         pred = model.predict(test_df)
@@ -308,7 +300,6 @@ def train_regression_model(df):
                        file_name="regression_model.pkl",
                        mime="application/octet-stream")
     
-    # Generate analysis report
     transformation = st.session_state.get("transform", "None")
     outlier_method = st.session_state.get("outliers", "None")
     reduction = st.session_state.get("reduce", "None")
