@@ -8,7 +8,7 @@ scikit-image
 
 # Face Detection and Analysis
 face_recognition
-mediapipe
+
 
 # OCR (if needed)
 easyocr
