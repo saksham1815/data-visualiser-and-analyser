@@ -1,21 +1,15 @@
 streamlit
-
-# Core
+pandas
 numpy
-opencv-python-headless
-Pillow
-scikit-image
-
-# Face Detection and Analysis
-face_recognition
-
-
-# OCR (if needed)
-easyocr
-
-# PyTorch (for EasyOCR)
-torch
-torchvision
-
-# Transformers (optional, if you’re using NLP/emotion detection)
-transformers
+plotly
+scikit-learn
+optuna
+shap
+xgboost
+lightgbm
+sweetviz
+pandas-profiling
+reportlab
+fastapi
+uvicorn
+statsmodels
