@@ -39,19 +39,20 @@ def clean_data(df):
     
     for col in df.columns:
         if df[col].dtype in ['float64', 'int64']:
-            df[col] = imputer_numeric.fit_transform(df[[col]])
+            df[col] = imputer_numeric.fit_transform(df[[col]]).ravel()
         else:
-            df[col] = imputer_categorical.fit_transform(df[[col]])
+            df[col] = imputer_categorical.fit_transform(df[[col]]).ravel()
     
     df = df.drop_duplicates()
     st.write("Data cleaning completed.")
     return df
 
+
 def transform_data(df):
     st.write("**Transforming Data:** Applying normalization/standardization and encoding...")
     numeric_cols = df.select_dtypes(include=['float64', 'int64']).columns.tolist()
     transformation_choice = st.selectbox("Select Transformation", ["None", "Normalization", "Standardization"], key="transform")
-    
+
     if transformation_choice == "Normalization":
         scaler = MinMaxScaler()
         df[numeric_cols] = scaler.fit_transform(df[numeric_cols])
@@ -63,12 +64,18 @@ def transform_data(df):
     else:
         st.write("No transformation applied.")
     
-    # Encoding categorical variables if any
+    # Encoding categorical variables only if unique values < threshold
     cat_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
-    if cat_cols:
-        st.write("Encoding categorical variables:", cat_cols)
-        df = pd.get_dummies(df, columns=cat_cols, drop_first=True)
+    safe_cat_cols = [col for col in cat_cols if df[col].nunique() < 100]  # You can adjust 100 as needed
+    
+    if safe_cat_cols:
+        st.write("Encoding categorical variables:", safe_cat_cols)
+        df = pd.get_dummies(df, columns=safe_cat_cols, drop_first=True)
+    else:
+        st.warning("No suitable categorical columns for one-hot encoding (high cardinality skipped).")
+    
     return df
+
 
 def handle_outliers(df):
     st.write("**Outlier Management:**")
